@@ -9,6 +9,8 @@ import threading
 import logging
 from typing import List, Dict, Any
 from datetime import datetime
+from datastar_py import ServerSentEventGenerator as SSE
+from datastar_py.fastapi import datastar_response, DatastarResponse
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -133,14 +135,32 @@ async def dashboard(request: Request):
         }
     )
 
+@app.get("/updates")
+@datastar_response
+async def updates(request: Request) -> DatastarResponse:
+    """
+    get updates via Server-Sent Events (SSE)
+    """
+    while True:
+        # Get thread-safe copies of queue data
+        trades = get_queue_data(trade_queue)
+        tickers = get_queue_data(ticker_queue)
+        current_ticker = get_latest_ticker()
+                
+        # Render the template to get the HTML string
+        fragment = templates.get_template("content.html").render(
+            request=request,
+            trades=trades,
+            tickers=tickers,
+            latest_ticker=current_ticker,
+            symbol="BTC/USDT"
+        )
+        yield SSE.patch_elements(fragment, "#content", mode="inner")
+        await asyncio.sleep(.5)
+
 
 @app.on_event("startup")
 async def startup_event():
     """Start WebSocket listener on startup"""
     asyncio.create_task(binance_websocket_listener())
     logger.info("🚀 WebSocket listener started")
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

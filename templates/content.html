@@ -1,0 +1,121 @@
+<!-- Header: Current Price -->
+<div class="bg-gray-800 rounded-lg p-6 mb-4 border border-gray-700">
+    <div class="flex justify-between items-start">
+        <div>
+            <div class="text-gray-400 text-sm uppercase tracking-wide">{{ symbol }}</div>
+            <div id="current-price" class="text-5xl font-bold">
+                {% if latest_ticker %}
+                    ${{ "%.2f"|format(latest_ticker.c|float) }}
+                {% else %}
+                    $0.00
+                {% endif %}
+            </div>
+        </div>
+        <div class="text-right">
+            <div id="price-change" class="text-2xl font-semibold 
+                {% if latest_ticker and latest_ticker.p|float >= 0 %}text-up{% else %}text-down{% endif %}">
+                {% if latest_ticker %}
+                    {{ "%+.2f"|format(latest_ticker.p|float) }} ({{ "%+.3f"|format(latest_ticker.P|float) }}%)
+                {% else %}
+                    +$0.00 (0.000%)
+                {% endif %}
+            </div>
+            <div class="text-gray-400 text-sm mt-1">
+                24h High: <span id="high-24h" class="text-green-400">
+                    {% if latest_ticker %}${{ "%.2f"|format(latest_ticker.h|float) }}{% else %}--{% endif %}</span>
+            </div>
+            <div class="text-gray-400 text-sm">
+                24h Low: <span id="low-24h" class="text-red-400">
+                    {% if latest_ticker %}${{ "%.2f"|format(latest_ticker.l|float) }}{% else %}--{% endif %}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="text-gray-400 text-xs uppercase">Volume (BTC)</div>
+        <div id="volume-btc" class="text-xl font-semibold mt-1">
+            {% if latest_ticker %}{{ "%.2f"|format(latest_ticker.v|float) }}{% else %}--{% endif %}
+        </div>
+    </div>
+    
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="text-gray-400 text-xs uppercase">Volume (USDT)</div>
+        <div id="volume-usdt" class="text-xl font-semibold mt-1">
+            {% if latest_ticker %}{{ "%.2f"|format((latest_ticker.q|float) / 1e9) }}B{% else %}--{% endif %}
+        </div>
+    </div>
+    
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="text-gray-400 text-xs uppercase">24h Trades</div>
+        <div id="trades-24h" class="text-xl font-semibold mt-1">
+            {% if latest_ticker %}{{ "{:,}".format(latest_ticker.n|int) }}{% else %}--{% endif %}
+        </div>
+    </div>
+    
+    <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div class="text-gray-400 text-xs uppercase">VWAP</div>
+        <div id="vwap" class="text-xl font-semibold mt-1">
+            {% if latest_ticker %}${{ "%.2f"|format(latest_ticker.w|float) }}{% else %}--{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Trade Feed -->
+<div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden mb-4">
+    <div class="bg-gray-700 px-4 py-2 flex justify-between items-center">
+        <h3 class="font-semibold">Live Trades (Last {{ trades|length }})</h3>
+        <div class="flex gap-2 text-xs">
+            <span class="text-green-400">● Buy</span>
+            <span class="text-red-400">● Sell</span>
+        </div>
+    </div>
+    <div id="trade-feed" class="h-96 overflow-y-auto text-sm">
+        {% for trade in trades %}
+        <div class="trade-item flex justify-between px-4 py-1 border-b border-gray-700 
+            {% if loop.index0 == 0 %}bg-gray-700{% endif %}">
+            <div>
+                <span class="{% if not trade.m %}text-green-400{% else %}text-red-400{% endif %} font-medium">
+                    ${{ "%.2f"|format(trade.p|float) }}
+                </span>
+                <span class="text-gray-500 ml-2">{{ (trade.T // 1000)|timestamp_to_time }}</span>
+            </div>
+            <div class="text-right">
+                <span class="text-white">{{ "%.4f"|format(trade.q|float) }}</span>
+                <span class="text-xs {% if not trade.m %}text-green-400{% else %}text-red-400{% endif %} ml-2">
+                    {{ 'BUY' if not trade.m else 'SELL' }}
+                </span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Order Book -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div class="bg-green-900 bg-opacity-20 px-4 py-2 text-green-400 font-semibold">BIDS</div>
+        <div id="bids" class="p-2 text-sm">
+            {% if latest_ticker %}
+            <div class="flex justify-between items-center py-1">
+                <span class="text-green-400">${{ "%.2f"|format(latest_ticker.b|float) }}</span>
+                <span class="text-gray-300">{{ "%.4f"|format(latest_ticker.B|float) }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+        <div class="bg-red-900 bg-opacity-20 px-4 py-2 text-red-400 font-semibold">ASKS</div>
+        <div id="asks" class="p-2 text-sm">
+            {% if latest_ticker %}
+            <div class="flex justify-between items-center py-1">
+                <span class="text-red-400">${{ "%.2f"|format(latest_ticker.a|float) }}</span>
+                <span class="text-gray-300">{{ "%.4f"|format(latest_ticker.A|float) }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
