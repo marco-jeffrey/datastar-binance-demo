@@ -32,8 +32,10 @@
 </head>
 <!-- <div class="w-10 h-10 bg-red-500" data-on:click="console.log('clicked'); @get('/updates')"></div> -->
 <body class="p-4 max-w-7xl mx-auto" >
-    <div id="content" data-on:click="console.log('loading'); @get('/updates')">
+    <div data-on-intersect="@get('/updates')">
+    <div id="content" >
         {% include 'content.html' %}
+    </div>
     </div>
 
 
